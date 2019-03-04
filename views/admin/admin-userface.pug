@@ -1,12 +1,13 @@
 extends ./admin
 
 block main
-  div 头像上传
+  h1 头像上传
+  div.userface_div
     button(type="button")#upload.layui-btn.layui-btn-danger
       i.layui-icon
       |上传图片
     .layui-inline.layui-word-aux
-      |这里以限制 60KB 为例
+      |( 图片必须小于1M )
 
 
   script.
@@ -17,10 +18,10 @@ block main
 
       //设定文件大小限制
       upload.render({
-        elem: '#upload'
-        ,url: '/upload'
-        ,size: 60 //限制文件大小，单位 KB
-        ,done(res){
+        elem: '#upload',
+        url: '/upload',
+        size: 1024, //限制文件大小，单位 KB
+        done(res){
           layer.alert(res.message)
         }
       });
