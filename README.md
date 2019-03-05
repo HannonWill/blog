@@ -4,7 +4,7 @@
 #### 启动项目
 ```
 cd blog
-mongod -dbpath database/db
+mongod --dbpath database/db
 npm i
 node app
 ```
