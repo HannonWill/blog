@@ -12,7 +12,8 @@ const logger = require('koa-logger');
 const { join } = require('path');
 //后端session模块儿
 const session = require('koa-session');
-
+//compress模块儿
+const compress = require('koa-compress');
 
 //生成koa实例 
 const app = new Koa
@@ -28,7 +29,13 @@ const CONFIG = {
   rolling: true
 }
 //注册日志模块
-//app.use(logger())
+app.use(logger())
+
+//资源压缩模块儿 compress
+app.use(compress({
+  threshold: 2048,
+  flush: require('zlib').Z_SYNC_FLUSH
+}))
 
 //注册 session
 app.use(session(CONFIG, app))
