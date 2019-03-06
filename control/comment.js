@@ -45,4 +45,42 @@ exports.save = async ctx => {
       }
     })
   ctx.body = message
-} 
+}
+
+//后台：获取用户所有评论
+exports.comlist = async ctx => {
+  const uid = ctx.session.uid
+  const data = await Comment.find({ from: uid }).populate("article", "title")
+
+  ctx.body = {
+    code: 0,
+    count: data.length,
+    data
+  }
+}
+
+//删除对应id的评论
+exports.dele = async ctx => {
+  const commentId = ctx.params.id
+
+  let res = {
+    state: 1,
+    message: '删除成功'
+  }
+  //findby..and.. 直接在数据库操作，不会触发钩子
+  // Comment.findByIdAndRemove(commentId).exec()
+  //数据库的实例的方法，（静态方法） 同样不会触发
+  // Comment.deleteOne({ _id: commentId }).exec()
+
+  //钩子监听文档自身调用的方法 原型上的方法
+  await Comment.findById(commentId)
+    .then(data => data.remove())
+    .catch(err => {
+      res = {
+        state: 0,
+        message: err
+      }
+    })
+  // new Comment({}).remove()
+  ctx.body = res
+}

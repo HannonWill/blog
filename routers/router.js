@@ -4,6 +4,7 @@ const user = require("../control/user");
 const article = require("../control/article");
 const comment = require('../control/comment');
 const admin = require('../control/admin');
+const upload = require('../util/upload');
 
 const router = new Router
 
@@ -49,6 +50,28 @@ router.post("/comment", user.keeplog, comment.save)
 
 //个人中心
 router.get("/admin/:id", user.keeplog, admin.index)
+
+//头像上传
+router.post("/upload", user.keeplog, upload.single("file"), user.upload)
+
+//获取用户的所有评论
+router.get("/user/comments", user.keeplog, comment.comlist)
+
+//后台：删除用户的评论
+//可以简写成router.del
+router.delete("/comment/:id", user.keeplog, comment.dele)
+
+//获取用户所有文章
+router.get("/user/articles", user.keeplog, article.artlist)
+
+//删除文章
+router.delete("/article/:id", user.keeplog, article.dele)
+
+//获取用户信息
+router.get("/user/users", user.keeplog, user.userlist)
+
+//删除用户信息
+router.delete("/user/:id", user.keeplog, user.dele)
 
 //404页面
 router.get("*", async ctx => {

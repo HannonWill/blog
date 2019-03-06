@@ -1,5 +1,7 @@
 const encrypt = require('../util/encrypt');
 const User = require('../models/user');
+const Article = require('../models/article');
+
 
 //用户注册
 exports.reg = async ctx => {
@@ -87,7 +89,7 @@ exports.login = async ctx => {
     }
 
     //让用户在他的cookie里设置username password（加密后的密码）
-    ctx.cookies.set("username", encrypt(username), {
+    ctx.cookies.set("username", new Buffer('username').toString('base64'), {
       //生效的域
       domain: "localhost",
       path: '/',
@@ -134,10 +136,16 @@ exports.keeplog = async (ctx, next) => {
   if (ctx.session.isNew) {
     //session 没有数据
     if (ctx.cookies.get("username")) {
+      let uid = ctx.cookies.get("uid")
+      const avatar = await User.findById(uid)
+        .then(data => {
+          data.avatar
+        })
       //没有session有cookie的情况， 认为是登录状态，更新session
       ctx.session = {
-        username: ctx.cookies.get("username"),
-        uid: ctx.cookies.get("uid"),
+        username: new Buffer(ctx.cookies.get("username"), 'base64').toString(),
+        uid,
+        avatar
       }
     }
     //否则有session 认为是登录状态
@@ -157,4 +165,73 @@ exports.logout = async ctx => {
   })
   //在后台做重定向
   ctx.redirect("/")
+}
+
+//用户头像上传
+exports.upload = async ctx => {
+  const filename = ctx.req.file.filename;
+
+  let data = {};
+  await User.update({ _id: ctx.session.uid }, { $set: { avatar: "/avatar/" + filename } }, (err, res) => {
+    if (err) {
+      data = {
+        status: 0,
+        message: "上传失败！"
+      }
+    } else {
+      data = {
+        status: 1,
+        message: "上传成功！"
+      }
+    }
+  })
+  ctx.body = data
+}
+
+//管理员获取用户信息
+exports.userlist = async ctx => {
+  const data = await User.find({ username: { $ne: "admin" } }).then(data => data)
+
+  ctx.body = {
+    code: 0,
+    count: data.length,
+    data
+  }
+}
+
+//管理员删除用户
+exports.dele = async ctx => {
+  const userId = ctx.params.id;
+
+  let res = {
+    state: 1,
+    message: '删除成功！'
+  }
+  //删除用户文章
+  await Article.find({ author: userId })
+    .then(data => data.forEach(v => v.remove()))
+    .catch(err => {
+      if (err) {
+        res = {
+          state: 0,
+          message: err
+        }
+      }
+    })
+
+
+
+  //删除用户
+  await User.findById(userId)
+    .then(data => data.remove())
+    .catch(err => {
+      if (err) {
+        res = {
+          state: 0,
+          message: err
+        }
+      }
+    })
+  console.log(res)
+  ctx.body = res
 }

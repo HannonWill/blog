@@ -28,7 +28,7 @@ const CONFIG = {
   rolling: true
 }
 //注册日志模块
-app.use(logger())
+//app.use(logger())
 
 //注册 session
 app.use(session(CONFIG, app))

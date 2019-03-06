@@ -20,4 +20,19 @@ const ArticleSchema = new Schema({
     }
   })
 
+ArticleSchema.post("remove", doc => {
+  const Comment = require('../models/Comment');
+  const User = require('../models/user');
+  const { _id: artId, author: authorId } = doc
+
+  //当前用户文章-1
+  User.findByIdAndUpdate(authorId, { $inc: { articleNum: -1 } }).exec()
+
+  //评论调用remove
+  Comment.find({ article: artId })
+    .then(data => {
+      data.forEach(v => v.remove())
+    })
+})
+
 module.exports = ArticleSchema

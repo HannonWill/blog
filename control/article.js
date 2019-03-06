@@ -37,19 +37,17 @@ exports.add = async ctx => {
       })
       resolve(data)
     })
+  }).then(data => {
+    ctx.body = {
+      msg: "发表成功",
+      status: 1
+    }
+  }).catch(err => {
+    ctx.body = {
+      msg: "发表失败",
+      status: 0
+    }
   })
-    .then(data => {
-      ctx.body = {
-        msg: "发表成功",
-        status: 1
-      }
-    })
-    .catch(err => {
-      ctx.body = {
-        msg: "发表失败",
-        status: 0
-      }
-    })
 
 
   //promise的形式
@@ -88,6 +86,8 @@ exports.getList = async (ctx) => {
     .catch(err => {
       console.log(err)
     })
+
+
   //exec()执行以上所有查询语句, 或者 .then 或者最后一个语句传回调
   //.exec(() => {})
   //ctx是同一个, 都有session
@@ -126,4 +126,44 @@ exports.details = async ctx => {
     article,
     comment
   })
+}
+
+//所有文章
+exports.artlist = async ctx => {
+  const uid = ctx.session.uid
+
+  const data = await Article.find({ author: uid })
+
+  ctx.body = {
+    code: 0,
+    count: data.length,
+    data
+  }
+}
+
+//删除对应id的文章
+exports.dele = async ctx => {
+  const articleId = ctx.params.id
+  const uid = ctx.session.uid
+  //需要删除文章评论 
+  //评论人的commentNum - 1 
+  //用户的articleNum - 1
+  let res = {
+    state: 1,
+    message: "删除成功"
+  }
+
+  await Article.findById(articleId)
+    .then(data => data.remove())
+    .catch(err => {
+      if (err) {
+        res = {
+          state: 0,
+          message: err
+        }
+      }
+    })
+
+
+  ctx.body = res
 }
